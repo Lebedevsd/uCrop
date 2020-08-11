@@ -93,7 +93,7 @@ public class BitmapLoadTask extends AsyncTask<Void, Void, BitmapLoadTask.BitmapW
         options.inJustDecodeBounds = false;
 
         Bitmap decodeSampledBitmap = null;
-
+        final int MAX_BITMAP_SIZE = 100 * 1024 * 1024; // 100 MB
         boolean decodeAttemptSuccess = false;
         while (!decodeAttemptSuccess) {
             try {
@@ -105,6 +105,11 @@ public class BitmapLoadTask extends AsyncTask<Void, Void, BitmapLoadTask.BitmapW
                     }
                 } finally {
                     BitmapLoadUtils.close(stream);
+                }
+                int bitmapSize = decodeSampledBitmap != null ? decodeSampledBitmap.getByteCount() : 0;
+                if (bitmapSize > MAX_BITMAP_SIZE) { // AVOID CRASH 'Canvas: trying to draw too large bitmap.'
+                    options.inSampleSize *= 2;
+                    continue;
                 }
                 decodeAttemptSuccess = true;
             } catch (OutOfMemoryError error) {
